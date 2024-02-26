@@ -1,0 +1,77 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+Resources:
+  # =======================================================
+  #               S3 Buckets
+  # =======================================================
+  RawDataBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: !Join ['-', ['finscore-data-raw-poc', !Select [4, !Split ['-', !Select [2, !Split ['/', !Ref AWS::StackId]]]], 'cf']]
+  
+  CleansedDataBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: !Join ['-', ['finscore-data-cleansed-poc', !Select [4, !Split ['-', !Select [2, !Split ['/', !Ref AWS::StackId]]]], 'cf']]
+
+  CuratedDataBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: !Join ['-', ['finscore-data-curated-poc', !Select [4, !Split ['-', !Select [2, !Split ['/', !Ref AWS::StackId]]]], 'cf']]
+
+  # =======================================================
+  #               DynamoDB Tables
+  # =======================================================
+  CleansedMetaDataTable: 
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Join ['_',['globe_raw_to_cleaned_metadata_poc',!Select [4, !Split ['-', !Select [2, !Split ['/', !Ref AWS::StackId]]]], 'cf']]
+      AttributeDefinitions:
+        - AttributeName: "dataset"
+          AttributeType: "S"
+        - AttributeName: "sort_key"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "dataset"
+          KeyType: "HASH"
+        - AttributeName: "sort_key"
+          KeyType: "RANGE"
+      BillingMode: PROVISIONED
+      TableClass: STANDARD
+      ProvisionedThroughput: 
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      DeletionProtectionEnabled: False
+
+  TransformedMetaDataTable: 
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Join ['_',['globe_cleaned_to_transformed_metadata_poc',!Select [4, !Split ['-', !Select [2, !Split ['/', !Ref AWS::StackId]]]], 'cf']]
+      AttributeDefinitions:
+        - AttributeName: "dataset"
+          AttributeType: "S"
+        - AttributeName: "sort_key"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "dataset"
+          KeyType: "HASH"
+        - AttributeName: "sort_key"
+          KeyType: "RANGE"
+      BillingMode: PROVISIONED
+      TableClass: STANDARD
+      ProvisionedThroughput: 
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      DeletionProtectionEnabled: False
+
+Outputs:
+  RawDataBuckerName:
+    Value: !Ref RawDataBucket
+  CleansedDataBuckerName:
+    Value: !Ref CleansedDataBucket
+  CuratedDataBuckerName:
+    Value: !Ref CuratedDataBucket
+  CleansedMetaDataTableName:
+    Value: !Ref CleansedMetaDataTable
+  TransformedMetaDataTableName:
+    Value: !Ref CleansedMetaDataTable
